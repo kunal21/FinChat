@@ -64,3 +64,6 @@ dist/
 
 # vscode
 .vscode/
+
+# license
+LICENSE

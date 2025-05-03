@@ -1,8 +1,8 @@
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 envfile := ./.env
-clear_db_after_schema_change := database/last-cleared.dummy
-db_schema := database/init/*
+# clear_db_after_schema_change := database/last-cleared.dummy
+# db_schema := database/init/*
 
 .PHONY: help start start-no-webhooks debug sql logs stop clear-db
 

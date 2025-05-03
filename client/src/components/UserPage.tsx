@@ -25,6 +25,7 @@ import ItemCard from './ItemCard.tsx';
 import UserCard from './UserCard.tsx';
 import LoadingCallout from './LoadingCallout.tsx';
 import ErrorMessage from './ErrorMessage.tsx';
+import ChatWindow from './ChatWindow.tsx';
 
 
 // provides view of user's net worth, spending by category and allows them to explore
@@ -43,6 +44,7 @@ const UserPage = ({ match }: RouteComponentProps<RouteInfo>) => {
   const [transactions, setTransactions] = useState([]);
   const [accounts, setAccounts] = useState<AccountType[]>([]);
   const [assets, setAssets] = useState<AssetType[]>([]);
+  const [showChat, setShowChat] = useState(false);
 
   const { getTransactionsByUser, transactionsByUser } = useTransactions();
   const { getAccountsByUser, accountsByUser } = useAccounts();
@@ -56,6 +58,10 @@ const UserPage = ({ match }: RouteComponentProps<RouteInfo>) => {
     // only generate a link token upon a click from enduser to add a bank;
     // if done earlier, it may expire before enduser actually activates Link to add a bank.
     await generateLinkToken(userId, null);
+  };
+
+  const toggleView = () => {
+    setShowChat(!showChat);
   };
 
   // update data store with user
@@ -135,90 +141,100 @@ const UserPage = ({ match }: RouteComponentProps<RouteInfo>) => {
       </NavigationLink>
 
       <Banner />
-      {linkTokens.error.error_code != null && (
-        <Callout warning>
-          <div>
-            Unable to fetch link_token: please make sure your backend server is
-            running and that your .env file has been configured correctly.
-          </div>
-          <div>
-            Error Code: <code>{linkTokens.error.error_code}</code>
-          </div>
-          <div>
-            Error Type: <code>{linkTokens.error.error_type}</code>{' '}
-          </div>
-          <div>Error Message: {linkTokens.error.error_message}</div>
-        </Callout>
-      )}
-      <UserCard user={user} userId={userId} removeButton={false} linkButton />
-      {numOfItems === 0 && <ErrorMessage />}
-      {numOfItems > 0 && transactions.length === 0 && (
-        <div className="loading">
-          <LoadingSpinner />
-          <LoadingCallout />
-        </div>
-      )}
-      {numOfItems > 0 && transactions.length > 0 && (
-        <>
-          <NetWorth
-            accounts={accounts}
-            numOfItems={numOfItems}
-            personalAssets={assets}
-            userId={userId}
-            assetsOnly={false}
-          />
-          <SpendingInsights
-            numOfItems={numOfItems}
-            transactions={transactions}
-          />
-        </>
-      )}
-      {numOfItems === 0 && transactions.length === 0 && assets.length > 0 && (
-        <>
-          <NetWorth
-            accounts={accounts}
-            numOfItems={numOfItems}
-            personalAssets={assets}
-            userId={userId}
-            assetsOnly
-          />
-        </>
-      )}
-      {numOfItems > 0 && (
-        <>
-          <div className="item__header">
-            <div>
-              <h2 className="item__header-heading">
-                {`${items.length} ${pluralize('Bank', items.length)} Linked`}
-              </h2>
-              {!!items.length && (
-                <p className="item__header-subheading">
-                  Below is a list of all your connected banks. Click on a bank
-                  to view its associated accounts.
-                </p>
-              )}
-            </div>
+        <Button onClick={toggleView} centered inline>
+          {showChat ? 'View Financial Info' : 'Chat with App'}
+      </Button>
 
-            <Button
-              large
-              inline
-              className="add-account__button"
-              onClick={initiateLink}
-            >
-              Add another bank
-            </Button>
-
-            {token != null && token.length > 0 && (
-              // Link will not render unless there is a link token
-              <LaunchLink token={token} userId={userId} itemId={null} />
-            )}
-          </div>
-          <ErrorMessage />
-          {items.map(item => (
-            <div id="itemCards" key={item.id}>
-              <ItemCard item={item} userId={userId} />
+      {showChat ? (
+        <ChatWindow userId={userId} />
+      ) : (
+        <>
+          {linkTokens.error.error_code != null && (
+            <Callout warning>
+              <div>
+                Unable to fetch link_token: please make sure your backend server is
+                running and that your .env file has been configured correctly.
+              </div>
+              <div>
+                Error Code: <code>{linkTokens.error.error_code}</code>
+              </div>
+              <div>
+                Error Type: <code>{linkTokens.error.error_type}</code>{' '}
+              </div>
+              <div>Error Message: {linkTokens.error.error_message}</div>
+            </Callout>
+          )}
+          <UserCard user={user} userId={userId} removeButton={false} linkButton />
+          {numOfItems === 0 && <ErrorMessage />}
+          {numOfItems > 0 && transactions.length === 0 && (
+            <div className="loading">
+              <LoadingSpinner />
+              <LoadingCallout />
             </div>
-          ))}
+          )}
+          {numOfItems > 0 && transactions.length > 0 && (
+            <>
+              <NetWorth
+                accounts={accounts}
+                numOfItems={numOfItems}
+                personalAssets={assets}
+                userId={userId}
+                assetsOnly={false}
+              />
+              <SpendingInsights
+                numOfItems={numOfItems}
+                transactions={transactions}
+              />
+            </>
+          )}
+          {numOfItems === 0 && transactions.length === 0 && assets.length > 0 && (
+            <>
+              <NetWorth
+                accounts={accounts}
+                numOfItems={numOfItems}
+                personalAssets={assets}
+                userId={userId}
+                assetsOnly
+              />
+            </>
+          )}
+          {numOfItems > 0 && (
+            <>
+              <div className="item__header">
+                <div>
+                  <h2 className="item__header-heading">
+                    {`${items.length} ${pluralize('Bank', items.length)} Linked`}
+                  </h2>
+                  {!!items.length && (
+                    <p className="item__header-subheading">
+                      Below is a list of all your connected banks. Click on a bank
+                      to view its associated accounts.
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  large
+                  inline
+                  className="add-account__button"
+                  onClick={initiateLink}
+                >
+                  Add another bank
+                </Button>
+
+                {token != null && token.length > 0 && (
+                  // Link will not render unless there is a link token
+                  <LaunchLink token={token} userId={userId} itemId={null} />
+                )}
+              </div>
+              <ErrorMessage />
+              {items.map(item => (
+                <div id="itemCards" key={item.id}>
+                  <ItemCard item={item} userId={userId} />
+                </div>
+              ))}
+            </>
+          )}
         </>
       )}
     </div>

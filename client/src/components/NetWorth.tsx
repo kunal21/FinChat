@@ -17,19 +17,12 @@ interface Props {
 export default function NetWorth(props: Props) {
   const { deleteAssetByAssetId } = useAssets();
   // sums of account types
-  const addAllAccounts = (
-    accountSubtypes: Array<AccountType['subtype']>
-  ): number =>
+  const addAllAccounts = (accountSubtypes: Array<AccountType['subtype']>): number =>
     props.accounts
       .filter(a => accountSubtypes.includes(a.subtype))
       .reduce((acc: number, val: AccountType) => acc + val.current_balance, 0);
 
-  const depository: number = addAllAccounts([
-    'checking',
-    'savings',
-    'cd',
-    'money market',
-  ]);
+  const depository: number = addAllAccounts(['checking','savings','cd','money market',]);
   const investment: number = addAllAccounts(['ira', '401k']);
   const loan: number = addAllAccounts(['student', 'mortgage']);
   const credit: number = addAllAccounts(['credit card']);

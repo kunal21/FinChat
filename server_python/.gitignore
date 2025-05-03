@@ -1,0 +1,63 @@
+# Python Byte-Compiled Files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+*.env
+
+# Environment Variables
+.env
+.env.*
+
+# Logs
+*.log
+logs/
+
+# Database Files
+*.sqlite3
+*.db
+
+# Alembic Migrations
+migrations/__pycache__/
+
+# Cache Files
+*.cache
+*.pytest_cache/
+
+# IDE-Specific Files
+# VSCode
+.vscode/
+# PyCharm
+.idea/
+
+# Dependency Files
+*.egg-info/
+*.eggs/
+dist/
+build/
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# macOS System Files
+.DS_Store
+
+# Windows System Files
+Thumbs.db
+
+# Temporary Files
+*.tmp
+*.swp
+*.bak
+*.old
+
+# Deployment Keys or Secrets
+*.pem
+*.key
