@@ -17,7 +17,6 @@ import { UsersProvider } from './services/users.tsx';
 import { CurrentUserProvider } from './services/currentUser.tsx';
 import { AssetsProvider } from './services/assets.tsx';
 import { ErrorsProvider } from './services/errors.tsx';
-
 import './App.scss';
 
 function App() {

@@ -1,0 +1,12 @@
+# Flask==2.3.2
+Flask[async]==2.3.2
+python-dotenv
+flask-cors==4.0.0
+Flask-SQLAlchemy==3.1.1       # ORM / DB session handling
+SQLAlchemy==2.0.23            # core engine (pulled in anyway)
+psycopg2-binary==2.9.9        # Postgres driver for SQLAlchemy
+plaid-python==18.1.0          # Plaid API client
+requests==2.31.0              # HTTP requests
+watchdog                      # For file monitoring
+Flask-Migrate==4.0.4          # For database migrations
+flask-socketio==5.3.6         # Socket.IO integration

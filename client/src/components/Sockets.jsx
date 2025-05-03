@@ -12,7 +12,7 @@ export default function Sockets() {
   const { getItemById } = useItems();
 
   useEffect(() => {
-    socket.current = io(`http://localhost:${REACT_APP_SERVER_PORT}`);
+    socket.current = io(`http://localhost:5001`);
 
     socket.current.on('SYNC_UPDATES_AVAILABLE', ({ itemId } = {}) => {
       const msg = `New Webhook Event: Item ${itemId}: Transactions updates`;
@@ -44,8 +44,8 @@ export default function Sockets() {
     });
 
 
-
     socket.current.on('NEW_TRANSACTIONS_DATA', ({ itemId } = {}) => {
+      console.log('NEW_TRANSACTIONS_DATA', itemId);
       getAccountsByItem(itemId);
       getTransactionsByItem(itemId);
     });
