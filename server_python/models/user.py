@@ -10,3 +10,4 @@ class User(db.Model, TimestampMixin):
     # relationships
     items   = db.relationship("Item",   back_populates="user", cascade="all, delete")
     assets  = db.relationship("Asset",  back_populates="user", cascade="all, delete")
+    messages = db.relationship("Message", back_populates="user", cascade="all, delete")

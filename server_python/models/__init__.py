@@ -10,3 +10,4 @@ from models.views import create_database_views  # noqa: F401
 from models.base import create_timestamp_trigger  # noqa: F401
 from models.transaction_view import TransactionView  # noqa: F401
 from models.account_view import AccountView  # noqa: F401
+from models.message import Message  # noqa: F401

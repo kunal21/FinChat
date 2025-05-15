@@ -7,20 +7,11 @@ from plaid_client import plaid_client
 from update_transactions import update_transactions
 import os   
 from sqlalchemy import text
+from utils import sanitize_item
 
 bp = Blueprint("items", __name__)
 logger = logging.getLogger(__name__)
 
-def sanitize_item(item):
-    """Sanitizes item data"""
-    return {
-        "id": item.id,
-        "user_id": item.user_id,
-        "plaid_institution_id": item.plaid_institution_id,
-        "status": item.status,
-        "created_at": item.created_at.isoformat() if item.created_at else None,
-        "updated_at": item.updated_at.isoformat() if item.updated_at else None
-    }
 
 # Create new item
 @bp.route("/items", methods=["POST"])

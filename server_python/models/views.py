@@ -56,6 +56,8 @@ def create_database_views():
         a.plaid_item_id,
         a.user_id,
         t.category,
+        t.personal_finance_category_primary,
+        t.personal_finance_category_detailed,
         t.type,
         t.name,
         t.amount,

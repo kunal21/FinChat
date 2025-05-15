@@ -18,7 +18,7 @@ const Banner = (props: Props) => {
 
   return (
     <div id="banner" className="bottom-border-content">
-      <h4>{PLAID_ENV} user</h4>
+      {/* <h4>{PLAID_ENV} user</h4> */}
       <div className="header">
         <h1 className="everpresent-content__heading">FinChat</h1>
       </div>

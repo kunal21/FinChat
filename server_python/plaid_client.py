@@ -1,4 +1,5 @@
 # server_python/plaid.py
+import csv
 import json
 import plaid
 from plaid.api import plaid_api
@@ -18,7 +19,7 @@ from models.plaid_api_event import PlaidApiEvent
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
-load_dotenv()
+# load_dotenv()
 
 class PlaidClient:
     _instance = None
@@ -48,6 +49,14 @@ class PlaidClient:
         api_client = ApiClient(configuration)
         self.client = plaid_api.PlaidApi(api_client)
         self._initialized = True
+
+        PLAID_CATEGORIES = []
+        with open("transactions-personal-finance-category-taxonomy.csv", newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                PLAID_CATEGORIES.append((row["PRIMARY"], row["DETAILED"], row["DESCRIPTION"]))
+        
+        self.PLAID_CATEGORIES = PLAID_CATEGORIES
 
     def log_plaid_api_event(self, item_id, user_id, plaid_method, args, response):
         """Log Plaid API events to database"""
@@ -122,7 +131,7 @@ class PlaidClient:
                 item_id, user_id, 'accountsGet',
                 {'access_token': access_token}, response
             )
-            
+
             return response
         except Exception as e:
             self.log_plaid_api_event(

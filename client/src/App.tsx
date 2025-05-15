@@ -17,6 +17,7 @@ import { UsersProvider } from './services/users.tsx';
 import { CurrentUserProvider } from './services/currentUser.tsx';
 import { AssetsProvider } from './services/assets.tsx';
 import { ErrorsProvider } from './services/errors.tsx';
+import { MessagesProvider } from './services/messages.tsx';
 import './App.scss';
 
 function App() {
@@ -39,13 +40,15 @@ function App() {
                   <UsersProvider>
                     <CurrentUserProvider>
                       <AssetsProvider>
-                        <Sockets />
-                        <Switch>
-                          <Route exact path="/" component={Landing} />
-                          <Route path="/user/:userId" component={UserPage} />
-                          <Route path="/oauth-link" component={OAuthLink} />
-                          <Route path="/admin" component={UserList} />
-                        </Switch>
+                        <MessagesProvider>
+                          <Sockets />
+                          <Switch>
+                            <Route exact path="/" component={Landing} />
+                            <Route path="/user/:userId" component={UserPage} />
+                            <Route path="/oauth-link" component={OAuthLink} />
+                            <Route path="/admin" component={UserList} />
+                          </Switch>
+                        </MessagesProvider>
                       </AssetsProvider>
                     </CurrentUserProvider>
                   </UsersProvider>

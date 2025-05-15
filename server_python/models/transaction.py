@@ -9,6 +9,8 @@ class Transaction(db.Model, TimestampMixin):
     plaid_transaction_id = db.Column(db.Text, unique=True, nullable=False)
     plaid_category_id    = db.Column(db.Text)
     category    = db.Column(db.Text)
+    personal_finance_category_primary = db.Column(db.Text)
+    personal_finance_category_detailed = db.Column(db.Text)
     type        = db.Column(db.Text, nullable=False)
     name        = db.Column(db.Text, nullable=False)
     amount      = db.Column(db.Numeric(28, 10), nullable=False)
