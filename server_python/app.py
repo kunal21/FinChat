@@ -41,7 +41,8 @@ def create_app():
         create_timestamp_trigger,
         create_database_views,
         TransactionView,
-        AccountView
+        AccountView,
+        Message,
     )
 
     # Initialize Socket.IO with proper configuration

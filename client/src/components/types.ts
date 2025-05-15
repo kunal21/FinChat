@@ -49,6 +49,8 @@ export interface TransactionType {
   plaid_transaction_id: string;
   plaid_category_id: string;
   category: string;
+  personal_finance_category_primary: string;
+  personal_finance_category_detailed: string;
   type: string;
   name: string;
   amount: number;
@@ -75,4 +77,13 @@ export interface UserType {
   username: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface MessageType {
+  id: number;
+  user_id: number;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+  author: string; // bot or user
 }

@@ -73,8 +73,8 @@ PLAID_SECRET=<your_plaid_secret>
 Clone the repository:
 
 ```bash
-git clone [https://github.com/kunal21/FinChat.git](https://github.com/kunal21/FinChat.git)
-cd FinChat
+git clone https://github.com/your-org/pattern-finance-dashboard.git
+cd pattern-finance-dashboard
 ```
 
 Start the application:
@@ -156,4 +156,19 @@ make stop
 - Use `socket.io` for real-time updates; ensure `setupProxy.js` is configured for `/socket.io` with `ws: true`.
 
 ---
+
+## Contributing
+
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/YourFeature`
+3. Commit your changes and push: `git push origin feature/YourFeature`
+4. Open a Pull Request.
+
+Please include tests and update migrations when modifying models.
+
+---
+
+## License
+
+This project is licensed under the MIT License.
 

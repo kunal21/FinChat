@@ -131,12 +131,14 @@ async def update_transactions_in_db(
             if not account:
                 logger.warning(f"Account with plaid_account_id {transaction['account_id']} not found.")
                 continue
-
+            
             new_transaction = Transaction(
                 plaid_transaction_id=transaction['transaction_id'],
                 account_id=account.id,  # Link to the correct account
                 plaid_category_id=transaction.get('category_id'),
                 category=transaction.get('category'),
+                personal_finance_category_primary=transaction.get('personal_finance_category').get('primary'),
+                personal_finance_category_detailed=transaction.get('personal_finance_category').get('detailed'),
                 type=transaction.get('transaction_type'),
                 name=transaction['name'],
                 amount=transaction['amount'],
@@ -162,6 +164,8 @@ async def update_transactions_in_db(
                 existing_transaction.account_id = account.id  # Update account_id
                 existing_transaction.plaid_category_id = transaction.get('category_id')
                 existing_transaction.category = transaction.get('category')
+                existing_transaction.personal_finance_category_primary = transaction.get('personal_finance_category').get('primary')
+                existing_transaction.personal_finance_category_detailed = transaction.get('personal_finance_category').get('detailed')
                 existing_transaction.type = transaction.get('transaction_type')
                 existing_transaction.name = transaction['name']
                 existing_transaction.amount = transaction['amount']

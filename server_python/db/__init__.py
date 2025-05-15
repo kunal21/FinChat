@@ -17,7 +17,6 @@ def init_db(app):
         db.create_all()
         
         create_timestamp_trigger()
-        create_database_views()
 
         # Create triggers for each table
         tables = ['users_table', 'items_table', 'assets_table', 

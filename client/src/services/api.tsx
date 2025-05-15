@@ -71,6 +71,18 @@ export const getTransactionsByUser = (userId: number) =>
 export const getInstitutionById = (instId: string) =>
   api.get(`/institutions/${instId}`);
 
+//messages
+export const getMessagesByUser = (userId: number) =>
+  api.get(`/users/${userId}/messages`);
+export const sendMessage = (userId: number, text: string) =>
+  api.post('/messages', { userId, text });
+export const deleteMessageById = (messageId: number) =>
+  api.delete(`/messages/${messageId}`);
+export const getMessageByMessageId = (messageId: number) =>
+  api.get(`/messages/${messageId}`);
+export const deleteAllMessagesByUser = (userId: number) => 
+  api.delete(`/users/${userId}/messages`);
+
 // misc
 export const postLinkEvent = (event: any) => api.post(`/link-event`, event);
 

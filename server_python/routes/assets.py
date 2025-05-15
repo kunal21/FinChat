@@ -2,20 +2,12 @@ from flask import Blueprint, request, jsonify, abort
 from models import Asset
 import logging
 from db import db
+from utils import sanitize_asset
 
+# This module handles asset-related routes for the Flask application.
+# It includes routes for creating, retrieving, and deleting assets.
 bp = Blueprint("assets", __name__)
 logger = logging.getLogger(__name__)
-
-def sanitize_asset(asset):
-    """Sanitizes asset data"""
-    return {
-        "id": asset.id,
-        "user_id": asset.user_id,
-        "description": asset.description,
-        "value": float(asset.value) if asset.value else None,
-        "created_at": asset.created_at.isoformat() if asset.created_at else None,
-        "updated_at": asset.updated_at.isoformat() if asset.updated_at else None
-    }
 
 @bp.route("/assets", methods=["POST"])
 def create_asset():

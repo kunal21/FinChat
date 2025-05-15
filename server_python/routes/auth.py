@@ -1,20 +1,10 @@
 from flask import Blueprint, request, jsonify, abort
 from models import User
 import logging
+from utils import sanitize_user
 
 bp = Blueprint("auth", __name__)
 logger = logging.getLogger(__name__)
-
-def sanitize_user(user):
-    """ Sanitizes user data """
-    if user is None: 
-        return None
-    return {
-        "id": user.id,
-        "username": user.username,
-        "created_at": user.created_at.isoformat() if user.created_at else None,
-        "updated_at": user.updated_at.isoformat() if user.updated_at else None
-    }
 
 @bp.route("/sessions", methods=["POST"])
 def login_user():

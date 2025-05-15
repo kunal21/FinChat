@@ -1,5 +1,5 @@
 from db import db
-
+from sqlalchemy import Table
 class TransactionView(db.Model):
     __tablename__ = 'transactions'  # Map to the transactions view
     __table_args__ = {'extend_existing': True}  # Allow reuse if already defined
@@ -12,6 +12,8 @@ class TransactionView(db.Model):
     plaid_item_id = db.Column(db.String)
     user_id = db.Column(db.Integer)
     category = db.Column(db.String)
+    personal_finance_category_primary = db.Column(db.String)
+    personal_finance_category_detailed = db.Column(db.String)
     type = db.Column(db.String)
     name = db.Column(db.String)
     amount = db.Column(db.Float)

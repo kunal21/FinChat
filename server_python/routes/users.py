@@ -1,67 +1,20 @@
-from flask import Blueprint, request, jsonify, abort
+from flask import Blueprint, current_app, request, jsonify, abort
 from models import User, Item, Account, Transaction     
 from plaid_client import plaid_client
 import logging
 from db import db
-from models import AccountView
-from models import TransactionView
+from models import (AccountView, TransactionView, Message)
+from utils import (
+    sanitize_user,
+    sanitize_item,
+    sanitize_account,
+    sanitize_transaction,
+    sanitize_message
+)
 
 bp = Blueprint("users", __name__)
 logger = logging.getLogger(__name__)
 
-def sanitize_user(user):
-    """Sanitizes user data"""
-    return {
-        "id": user.id,
-        "username": user.username,
-        "created_at": user.created_at.isoformat() if user.created_at else None,
-        "updated_at": user.updated_at.isoformat() if user.updated_at else None
-    }
-
-def sanitize_item(item):
-    """Sanitizes item data"""
-    return {
-        "id": item.id,
-        "user_id": item.user_id,
-        "plaid_institution_id": item.plaid_institution_id,
-        "status": item.status,
-        "created_at": item.created_at.isoformat() if item.created_at else None,
-        "updated_at": item.updated_at.isoformat() if item.updated_at else None
-    }
-
-def sanitize_account(account):
-    """Sanitizes account data"""
-    return {
-        "id": account.id,
-        "item_id": account.item_id,
-        "user_id": account.user_id,
-        "name": account.name,
-        "mask": account.mask,
-        "official_name": account.official_name,
-        "current_balance": float(account.current_balance) if account.current_balance else None,
-        "available_balance": float(account.available_balance) if account.available_balance else None,
-        "iso_currency_code": account.iso_currency_code,
-        "unofficial_currency_code": account.unofficial_currency_code,
-        "type": account.type,
-        "subtype": account.subtype,
-        "created_at": account.created_at.isoformat() if account.created_at else None,
-        "updated_at": account.updated_at.isoformat() if account.updated_at else None
-    }
-
-def sanitize_transaction(transaction):
-    """Sanitizes transaction"""
-    return {
-        "id": transaction.id,
-        "account_id": transaction.account_id,
-        "user_id": transaction.user_id,
-        "name": transaction.name,
-        "amount": float(transaction.amount) if transaction.amount else None,
-        "date": transaction.date.isoformat() if transaction.date else None,
-        "category": transaction.category,
-        "type": transaction.type,
-        "created_at": transaction.created_at.isoformat() if transaction.created_at else None,
-        "updated_at": transaction.updated_at.isoformat() if transaction.updated_at else None
-    }
 
 @bp.route("/users", methods=["GET"])
 def get_users():
@@ -130,3 +83,26 @@ def delete_user(user_id):
     db.session.commit()
     
     return "", 204
+
+@bp.route("/users/<int:user_id>/messages", methods=["DELETE"])
+def delete_user_messages(user_id):
+    """Delete all messages for a user"""
+    
+    messages = Message.query.filter_by(user_id=user_id).all()
+    for message in messages:
+        db.session.delete(message)
+        
+    db.session.commit()
+    
+    # Emit a socket event to notify clients
+    io = current_app.config['socketio']
+    io.emit('DELETE_ALL_MESSAGES', {})
+
+    return "", 204
+
+@bp.route("/users/<int:user_id>/messages", methods=["GET"])
+def get_user_messages(user_id):
+    """Get all messages for a user"""
+    
+    messages = Message.query.filter_by(user_id=user_id).all()
+    return jsonify([sanitize_message(msg) for msg in messages])

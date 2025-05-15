@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 
 import { useAccounts, useItems, useTransactions } from '../services';
+import { useMessages } from 'src/services/messages';
 const io = require('socket.io-client');
 const { REACT_APP_SERVER_PORT } = process.env;
 
@@ -10,6 +11,7 @@ export default function Sockets() {
   const { getAccountsByItem } = useAccounts();
   const { getTransactionsByItem } = useTransactions();
   const { getItemById } = useItems();
+  const { dispatch } = useMessages();
 
   useEffect(() => {
     socket.current = io(`http://localhost:5001`);
@@ -43,11 +45,22 @@ export default function Sockets() {
       getItemById(itemId, true);
     });
 
-
     socket.current.on('NEW_TRANSACTIONS_DATA', ({ itemId } = {}) => {
-      console.log('NEW_TRANSACTIONS_DATA', itemId);
       getAccountsByItem(itemId);
       getTransactionsByItem(itemId);
+    });
+
+    socket.current.on('NEW_RESPONSE_MESSAGE', ({ message } = {}) => {
+      dispatch({
+        type: 'ADD_MESSAGE',
+        payload: message,
+      });
+    });
+
+    socket.current.on('DELETE_ALL_MESSAGES', ({} = {}) => {
+      dispatch({
+        type: 'DELETE_ALL_MESSAGES',
+      });
     });
 
     return () => {

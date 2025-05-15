@@ -11,6 +11,7 @@ from .link_events import bp as link_events_bp
 from .link_tokens import bp as link_tokens_bp
 from .services import bp as services_bp
 from .unhandled import bp as unhandled_bp
+from .messages import bp as messages_bp
 
 blueprints: list[Blueprint] = [
     auth_bp,
@@ -23,4 +24,5 @@ blueprints: list[Blueprint] = [
     link_tokens_bp,
     services_bp,
     unhandled_bp,
+    messages_bp,
 ]
