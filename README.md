@@ -1,174 +1,62 @@
-# Pattern Finance Dashboard
+# FinChat - A Conversational Finance Assistant
 
-A personal finance dashboard that lets users link their bank accounts via Plaid and view consolidated assets, accounts, and transaction history in a modern, containerized stack.
+A responsive, AI-powered financial management application designed to aggregate your financial data, provide real-time insights, and respond to natural-language queries about your personal finances.
 
----
+## 🚀 Features
 
-## Features
+* **Conversational AI:** Leverages GPT-4 (LLMs) and Retrieval-Augmented Generation (RAG) to accurately interpret and respond to natural-language financial queries.
+* **Interactive Dashboard:** Built with TypeScript, displaying aggregated financial metrics including net worth, income, expenses, and categorized transactions.
+* **Secure Integration:** Seamlessly integrates with Plaid APIs to fetch transaction and balance data across multiple financial institutions.
+* **Structured Data Pipelines:** Containerized ETL pipelines ensure efficient processing, storage, and retrieval of financial data.
+* **Containerized Deployment:** Application and services deployed using Docker, ensuring portability, scalability, and ease of management.
 
-- **Account Linking**: Securely connect bank accounts using the Plaid Python SDK.
-- **Dashboard Views**: Consolidated view of assets, accounts, and transactions with real-time updates via WebSockets.
-- **RESTful API**: Backend built with Python Flask using modular Blueprints and an application-factory pattern.
-- **Database Management**: PostgreSQL schema managed by SQLAlchemy ORM and Flask-Migrate for versioned migrations.
-- **Containerization**: Entire stack (Flask API, React frontend, PostgreSQL) orchestrated with Docker Compose.
+## 🛠️ Tech Stack
 
----
+* **Frontend:** React, TypeScript, TailwindCSS
+* **Backend:** Python (Flask/FastAPI), OpenAI API, Plaid API
+* **AI & NLP:** GPT-4, Prompt Engineering, RAG
+* **Database:** PostgreSQL
+* **Containerization:** Docker
 
-## Architecture
+## 📦 Installation
 
-```
-+-------------+       +-------------+       +------------+
-|   React     | <-->  |  Flask API  | <-->  | PostgreSQL |
-|  Frontend   |       |  Backend    |       |  Database  |
-+-------------+       +-------------+       +------------+
-        ^                    ^                    ^
-        |                    |                    |
-        |    Socket.IO       |                    |
-        +--------------------+                    |
-        |                                         |
-    Docker Compose orchestration                  |
-        |                                         |
-        +-----------------------------------------+
-                     Named volumes
-```
+1. Clone the repository:
 
----
+   ```bash
+   git clone https://github.com/kunal21/FinChat.git
+   cd finance-assistant
+   ```
 
-## Tech Stack
+2. Set up environment variables:
 
-- **Frontend**: React, Axios, `socket.io-client`
-- **Backend**: Python 3.11, Flask, Flask-SocketIO, Flask-CORS
-- **Database**: PostgreSQL 11.2
-- **ORM & Migrations**: SQLAlchemy, Flask-Migrate (Alembic)
-- **Containerization**: Docker, Docker Compose
-- **Configuration**: python-dotenv for local `.env` loading
+   ```bash
+   cp .env.example .env
+   # Fill in your OpenAI and Plaid API keys
+   ```
 
----
+3. Build and run containers:
 
-## Prerequisites
+   ```bash
+   docker-compose up --build
+   ```
 
-- Docker Engine & Docker Compose installed on host machine
-- Plaid developer account credentials (Sandbox or Production)
+## 🎯 Usage
 
----
+* Visit the application on `http://localhost:3000`
+* Connect your financial accounts securely using Plaid.
+* Ask natural-language financial queries (e.g., "How much did I spend on groceries last month?")
+* View real-time updates of your financial metrics and dashboards.
 
-## Environment Variables
+## ✅ Future Enhancements
 
-Create a `.env` file in the project root (same level as `docker-compose.yml`) with the following:
+* Fine-tuning LLM models for improved accuracy
+* Enhanced analytics and predictive insights
+* Mobile application support
 
-```dotenv
-# Postgres
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=password
-POSTGRES_DB=postgres
-PLAID_ENV=sandbox
-PLAID_CLIENT_ID=<your_plaid_client_id>
-PLAID_SECRET=<your_plaid_secret>
-```
+## 📄 License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
 
 ---
 
-## Setup & Usage
-
-Clone the repository:
-
-```bash
-git clone https://github.com/your-org/pattern-finance-dashboard.git
-cd pattern-finance-dashboard
-```
-
-Start the application:
-
-```bash
-make start
-```
-
-This will:
-
-1. Pull or build the Docker images for the client, server, and database.
-2. Launch services in detached mode:
-   - React frontend on `http://localhost:3001`
-   - Flask API on `http://localhost:5001`
-   - PostgreSQL on port `5432`
-3. Run database migrations automatically via Flask-Migrate.
-
-View logs:
-
-```bash
-make logs
-```
-
-Stop and clean up:
-
-```bash
-make stop
-```
-
----
-
-## API Endpoints
-
-- **Auth**
-  - `POST /sessions` – login or register user
-- **Users**
-  - `GET  /users`        – list all users
-  - `POST /users`        – create a new user
-  - `GET  /users/:id`    – get user by ID
-- **Assets**
-  - `GET    /assets/:userId` – list assets for a user
-  - `POST   /assets`         – add a new asset
-  - `DELETE /assets/:id`     – delete an asset
-- **Items / Plaid**
-  - `POST   /items`                 – exchange token & add item
-  - `POST   /link-token`            – create a Plaid link token
-  - `POST   /link-event`            – log link events
-- **Accounts & Transactions**
-  - `GET /users/:id/accounts`
-  - `GET /items/:id/accounts`
-  - `GET /users/:id/transactions`
-  - `GET /items/:id/transactions`
-  - `GET /accounts/:id/transactions`
-  - `DELETE /items/:id`
-
----
-
-## Database Migrations
-
-- Initialize migrations (one-time):
-  ```bash
-  flask db init
-  ```
-- Create a new revision after changing models:
-  ```bash
-  flask db migrate -m "Your message"
-  ```
-- Apply migrations:
-  ```bash
-  flask db upgrade
-  ```
-
----
-
-## Development
-
-- React code is live-mounted into the `client` container with `CHOKIDAR_USEPOLLING=true` for reliable hot-reload.
-- Flask runs with `FLASK_ENV=development` and auto-reload enabled.
-- Use `socket.io` for real-time updates; ensure `setupProxy.js` is configured for `/socket.io` with `ws: true`.
-
----
-
-## Contributing
-
-1. Fork the repository.
-2. Create a feature branch: `git checkout -b feature/YourFeature`
-3. Commit your changes and push: `git push origin feature/YourFeature`
-4. Open a Pull Request.
-
-Please include tests and update migrations when modifying models.
-
----
-
-## License
-
-This project is licensed under the MIT License.
-
+Built with ❤️ by \[Your Name]
