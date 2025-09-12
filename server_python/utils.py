@@ -1,3 +1,5 @@
+ 
+
 def sanitize_user(user):
     """Sanitizes user data"""
     return {
@@ -6,6 +8,7 @@ def sanitize_user(user):
         "created_at": user.created_at.isoformat() if user.created_at else None,
         "updated_at": user.updated_at.isoformat() if user.updated_at else None
     }
+
 
 def sanitize_item(item):
     """Sanitizes item data"""
@@ -76,3 +79,6 @@ def sanitize_asset(asset):
         "created_at": asset.created_at.isoformat() if asset.created_at else None,
         "updated_at": asset.updated_at.isoformat() if asset.updated_at else None
     }
+
+
+ 

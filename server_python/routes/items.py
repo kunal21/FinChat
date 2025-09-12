@@ -50,7 +50,7 @@ async def create_item():
         db.session.add(new_item)
         db.session.commit()
 
-        await update_transactions(plaid_item_id)
+        # await update_transactions(plaid_item_id)
         io = current_app.config['socketio']
         io.emit('NEW_TRANSACTIONS_DATA', {'itemId': new_item.id})
         
@@ -124,7 +124,7 @@ def get_item_accounts(item_id):
 # Get transactions for item
 @bp.route("/items/<int:item_id>/transactions", methods=["GET"])
 def get_item_transactions(item_id):
-    # Query the transactions view using ORM
+    # # Query the transactions view using ORM
     transactions = TransactionView.query.filter_by(item_id=item_id).all()
 
     return jsonify([{

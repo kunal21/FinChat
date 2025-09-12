@@ -27,8 +27,10 @@ async def handle_transactions_webhook(request_body: Dict[str, Any], io: Any) -> 
             f'WEBHOOK: TRANSACTIONS: {webhook_code}: Plaid_item_id {plaid_item_id}: {additional_info}'
         )
         if webhook_code:
-            print(f"DEBUG: Emitting event {webhook_code} with itemId {item_id}")
-            io.emit(webhook_code, {'itemId': item_id})
+            if webhook_code in ['HISTORICAL_UPDATE', 'INITIAL_UPDATE', 'DEFAULT_UPDATE']:
+                io.emit('HISTORICAL_UPDATE', {'itemId': item_id})
+            else:
+                io.emit(webhook_code, {'itemId': item_id})
 
     if webhook_code == 'SYNC_UPDATES_AVAILABLE':
         # Fired when new transactions data becomes available
@@ -40,8 +42,25 @@ async def handle_transactions_webhook(request_body: Dict[str, Any], io: Any) -> 
             f'{result["removed_count"]} removed',
             item['id']
         )
+        # Emit a canonical event so clients always refresh transactions for this item
+        try:
+            io.emit('NEW_TRANSACTIONS_DATA', {'itemId': item['id']})
+            print(f"DEBUG: Emitted NEW_TRANSACTIONS_DATA for item {item['id']}")
+        except Exception as e:
+            print(f"DEBUG: Failed to emit NEW_TRANSACTIONS_DATA: {e}")
     elif webhook_code in ['DEFAULT_UPDATE', 'INITIAL_UPDATE', 'HISTORICAL_UPDATE']:
-        # Ignore - not needed if using sync endpoint + webhook
-        pass
+        result = await update_transactions(plaid_item_id)
+        item = await retrieve_item_by_plaid_item_id(plaid_item_id)
+        server_log_and_emit_socket(
+            f'Historical transactions: {result["added_count"]} added, '
+            f'{result["modified_count"]} modified, '
+            f'{result["removed_count"]} removed',
+            item['id']
+        )
+        try:
+            io.emit('NEW_TRANSACTIONS_DATA', {'itemId': item['id']})
+            print(f"DEBUG: Emitted NEW_TRANSACTIONS_DATA for item {item['id']}")
+        except Exception as e:
+            print(f"DEBUG: Failed to emit NEW_TRANSACTIONS_DATA: {e}")
     else:
         server_log_and_emit_socket('unhandled webhook type received.', plaid_item_id)

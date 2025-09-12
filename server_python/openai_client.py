@@ -1,4 +1,3 @@
-import csv
 from openai import OpenAI
 import os
 
@@ -19,6 +18,17 @@ class OpenAIClient:
         self.client = OpenAI(
             api_key=openai_client_id,
         )
+
+    def embed_texts(self, texts):
+        """Return embeddings for a list of texts using the embeddings API."""
+        import os
+        if not isinstance(texts, list):
+            texts = [texts]
+        model = os.getenv('OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small')
+        resp = self.client.embeddings.create(model=model, input=texts)
+        return [d.embedding for d in resp.data]
+    
+    
 
 openai_client = OpenAIClient()
         
