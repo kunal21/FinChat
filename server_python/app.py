@@ -28,7 +28,6 @@ def create_app():
 
     app.logger.info("Starting Flask application")
     init_db(app)
-
     from models import (
         TimestampMixin,                 
         User,

@@ -4,26 +4,26 @@ from sqlalchemy import text
 def create_database_views():
     """Create all database views"""
     db.session.execute(text("""
-    CREATE OR REPLACE VIEW users AS
+    CREATE OR REPLACE VIEW v_users AS
     SELECT id, username, created_at, updated_at
     FROM users_table;
     """))
 
     db.session.execute(text("""
-    CREATE OR REPLACE VIEW items AS
+    CREATE OR REPLACE VIEW v_items AS
     SELECT id, plaid_item_id, user_id, plaid_access_token, plaid_institution_id,
            status, created_at, updated_at, transactions_cursor
     FROM items_table;
     """))   
 
     db.session.execute(text("""
-    CREATE OR REPLACE VIEW assets AS
+    CREATE OR REPLACE VIEW v_assets AS
     SELECT id, user_id, value, description, created_at, updated_at
     FROM assets_table;
     """))
 
     db.session.execute(text("""
-    CREATE OR REPLACE VIEW accounts AS
+    CREATE OR REPLACE VIEW v_accounts AS
     SELECT 
         a.id,
         a.plaid_account_id,
@@ -42,19 +42,19 @@ def create_database_views():
         a.created_at,
         a.updated_at
     FROM accounts_table a
-    LEFT JOIN items i ON i.id = a.item_id;
+    LEFT JOIN items_table i ON i.id = a.item_id;
     """))
 
     db.session.execute(text("""
-    CREATE OR REPLACE VIEW transactions AS
+    CREATE OR REPLACE VIEW v_transactions AS
     SELECT 
         t.id,
         t.plaid_transaction_id,
         t.account_id,
         a.plaid_account_id,
         a.item_id,
-        a.plaid_item_id,
-        a.user_id,
+        i.plaid_item_id,
+        i.user_id,
         t.category,
         t.personal_finance_category_primary,
         t.personal_finance_category_detailed,
@@ -69,7 +69,8 @@ def create_database_views():
         t.created_at,
         t.updated_at
     FROM transactions_table t
-    LEFT JOIN accounts a ON t.account_id = a.id;
+    LEFT JOIN accounts_table a ON t.account_id = a.id
+    LEFT JOIN items_table i ON a.item_id = i.id;
     """))
 
     db.session.commit()

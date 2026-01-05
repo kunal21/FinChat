@@ -72,6 +72,25 @@ export interface AssetType {
   updated_at: string;
 }
 
+export interface HoldingType {
+  id: number;
+  account_id: number;
+  plaid_account_id: string;
+  security_id: string;
+  name: string;
+  ticker_symbol: string | null;
+  security_type: string | null;
+  quantity: number | null;
+  institution_price: number | null;
+  institution_price_as_of: string | null;
+  institution_value: number | null;
+  cost_basis: number | null;
+  iso_currency_code: string | null;
+  unofficial_currency_code: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface UserType {
   id: number;
   username: string | null;

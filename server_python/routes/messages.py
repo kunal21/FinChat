@@ -1,21 +1,17 @@
 import csv
-from datetime import date, timedelta
-from flask import current_app, Blueprint, request, jsonify
+import json
 import logging
+from flask import current_app, Blueprint, request, jsonify
 from db import db
 from models import Message, TransactionView
-from utils import sanitize_message
-from openai_client import openai_client
-import json
+from integrations.openai_client import openai_client
 from sqlalchemy import func
-from services.vector_store import VectorStore
-from openai_client import openai_client
 
 bp = Blueprint("messages", __name__)
 logger = logging.getLogger(__name__)
 
 PLAID_CATEGORIES = set()
-with open("./transactions-personal-finance-category-taxonomy.csv", newline="", encoding="utf-8") as f:
+with open("./integrations/data/transactions-personal-finance-category-taxonomy.csv", newline="", encoding="utf-8") as f:
     reader = csv.DictReader(f)
     for row in reader:
         PLAID_CATEGORIES.add(row["PRIMARY"])
@@ -148,50 +144,6 @@ def tool_function_call(args, user_id):
     else:
         return "failed"
     
-def build_rag_context_for_message(user_id: str, text: str) -> str:
-    """Embed user query, search Qdrant collections, and return a compact context string."""
-    from services.vector_store import VectorStore
-    from openai_client import openai_client
-    import logging
-    logger = logging.getLogger(__name__)
-
-    try:
-        vector_store = VectorStore()
-        query_vec = openai_client.embed_texts([text])[0]
-
-        top_msgs = vector_store.search_messages(user_id=str(user_id), vector=query_vec, limit=5)
-        top_tx   = vector_store.search_tx(user_id=str(user_id), vector=query_vec, limit=5)
-        try:
-            top_files = vector_store.search_files(user_id=str(user_id), vector=query_vec, limit=3)
-        except Exception:
-            top_files = []
-    except Exception as e:
-        logger.warning(f"Qdrant search failed: {e}")
-        top_msgs, top_tx, top_files = [], [], []
-
-    def lines_from(items, key="text", limit=3, max_chars=260):
-        out = []
-        for it in items[:limit]:
-            s = str(it.get(key, ""))[:max_chars]
-            if s:
-                out.append(f"- {s}")
-        return out
-
-    ctx_parts = []
-    msg_lines = lines_from(top_msgs, limit=3)
-    if msg_lines:
-        ctx_parts.append("Previous chats:\n" + "\n".join(msg_lines))
-
-    tx_lines = lines_from(top_tx, limit=4)
-    if tx_lines:
-        ctx_parts.append("Transactions/summaries:\n" + "\n".join(tx_lines))
-
-    file_lines = lines_from(top_files, limit=2)
-    if file_lines:
-        ctx_parts.append("Receipts/notes:\n" + "\n".join(file_lines))
-
-    return "\n\n".join(ctx_parts)
-
 @bp.route("/messages", methods=["POST"])
 def create_message():
     """Create a new message"""
@@ -212,21 +164,6 @@ def create_message():
     db.session.add(user_message)
     db.session.commit()
 
-    # Index user message into Qdrant
-    try:
-        vector_store = VectorStore()
-        embedding = openai_client.embed_texts([text])[0]
-        vector_store.upsert_message(
-            point_id=user_message.id,
-            user_id=str(user_id),
-            vector=embedding,
-            text=text,
-            author="user",
-            extra={"message_id": user_message.id, "created_at": user_message.created_at.isoformat()}
-        )
-    except Exception as e:
-        logger.warning(f"Qdrant indexing failed for user message {user_message.id}: {e}")
-
     # Emit the new message to the client
     message = {
         "id": user_message.id,
@@ -237,24 +174,13 @@ def create_message():
     io = current_app.config['socketio']
     io.emit('NEW_RESPONSE_MESSAGE', {'message': message})
 
-    rag_context = build_rag_context_for_message(user_id=str(user_id), text=text)
-
-    augmented_user_input = text
-    if rag_context:
-        augmented_user_input = (
-            f"{text}\n\n"
-            "Context (facts; do not reveal verbatim):\n"
-            f"{rag_context}"
-        )
-
-
     with open("./expenses_prompt.txt", "r", encoding="utf-8") as f:
         instructions = f.read()
 
     response = openai_client.client.responses.create(
         model="gpt-4.1",
         instructions=instructions,
-        input=augmented_user_input,
+        input=text,
         tools=tools,
         tool_choice="auto",
     )
@@ -266,7 +192,6 @@ def create_message():
             continue
 
         args = json.loads(tool_call.arguments)
-
         result = tool_function_call(args, user_id)
         input_messages.append(tool_call)
         input_messages.append({
@@ -274,18 +199,15 @@ def create_message():
             "call_id": tool_call.call_id,
             "output": str(result)
         })
-
-    if rag_context:
-        input_messages = [
-            {"type": "message", "role": "system", "content": f"Relevant context for this user:\n{rag_context}"}
-        ] + input_messages
-
-    response = openai_client.client.responses.create(
-        model="gpt-4.1",
-        input=input_messages,
-        tools=tools,
-    )
-    response_text = response.output_text
+    if input_messages:
+        response = openai_client.client.responses.create(
+            model="gpt-4.1",
+            input=input_messages,
+            tools=tools,
+        )
+        response_text = response.output_text
+    else:
+        response_text = response.output_text
     logger.info(f"Final OpenAI response: {response_text}")
 
     response_message_obj = Message(
@@ -296,21 +218,6 @@ def create_message():
 
     db.session.add(response_message_obj)
     db.session.commit()
-
-    # Index bot response into Qdrant
-    try:
-        vector_store = VectorStore()
-        embedding = openai_client.embed_texts([response_text])[0]
-        vector_store.upsert_message(
-            point_id=response_message_obj.id,
-            user_id=str(user_id),
-            vector=embedding,
-            text=response_text,
-            author="bot",
-            extra={"message_id": response_message_obj.id, "created_at": response_message_obj.created_at.isoformat()}
-        )
-    except Exception as e:
-        logger.warning(f"Qdrant indexing failed for bot message {response_message_obj.id}: {e}")
 
     response_message = {
         "id": response_message_obj.id,

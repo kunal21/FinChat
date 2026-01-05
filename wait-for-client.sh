@@ -14,7 +14,10 @@ cat <<EOF
 
 The client is ready!
 Open localhost:3001 in your browser to view the client.
-Run 'make logs' to view the service logs.
-Run 'make stop' to stop the docker containers.
-Run 'make help' to view other available commands.
+
+Docker Compose Commands:
+  docker compose logs --follow          # View service logs
+  docker compose down                   # Stop containers
+  docker compose restart <service>      # Restart a service
+  docker compose ps                     # List running services
 EOF

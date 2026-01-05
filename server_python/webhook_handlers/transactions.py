@@ -5,7 +5,7 @@ https://plaid.com/docs/#transactions-webhooks
 
 from typing import Dict, Any
 from db.queries import retrieve_item_by_plaid_item_id
-from update_transactions import update_transactions
+from jobs import update_transactions
 
 async def handle_transactions_webhook(request_body: Dict[str, Any], io: Any) -> None:
     """
@@ -16,51 +16,40 @@ async def handle_transactions_webhook(request_body: Dict[str, Any], io: Any) -> 
         request_body: The request body of an incoming webhook event
         io: A socket.io server instance
     """
+    webhook_type = request_body.get('webhook_type')
     webhook_code = request_body.get('webhook_code')
     plaid_item_id = request_body.get('item_id')
-    
-    print(f"DEBUG: Received webhook: {webhook_code} for item {plaid_item_id}")
-    print(f"DEBUG: Socket.io instance: {io}")
 
-    def server_log_and_emit_socket(additional_info: str, item_id: str) -> None:
-        print(
-            f'WEBHOOK: TRANSACTIONS: {webhook_code}: Plaid_item_id {plaid_item_id}: {additional_info}'
-        )
-        if webhook_code:
-            if webhook_code in ['HISTORICAL_UPDATE', 'INITIAL_UPDATE', 'DEFAULT_UPDATE']:
-                io.emit('HISTORICAL_UPDATE', {'itemId': item_id})
-            else:
-                io.emit(webhook_code, {'itemId': item_id})
+    update_like = {'SYNC_UPDATES_AVAILABLE', 'INITIAL_UPDATE', 'HISTORICAL_UPDATE'}
+    if webhook_type == 'TRANSACTIONS' and webhook_code in update_like:
+        try:
+            # 1) run sync (writes rows + commits)
+            result = await update_transactions(plaid_item_id)
 
-    if webhook_code == 'SYNC_UPDATES_AVAILABLE':
-        # Fired when new transactions data becomes available
-        result = await update_transactions(plaid_item_id)
-        item = await retrieve_item_by_plaid_item_id(plaid_item_id)
-        server_log_and_emit_socket(
-            f'Transactions: {result["added_count"]} added, '
-            f'{result["modified_count"]} modified, '
-            f'{result["removed_count"]} removed',
-            item['id']
-        )
-        # Emit a canonical event so clients always refresh transactions for this item
-        try:
-            io.emit('NEW_TRANSACTIONS_DATA', {'itemId': item['id']})
-            print(f"DEBUG: Emitted NEW_TRANSACTIONS_DATA for item {item['id']}")
+            # 2) map plaid_item_id -> numeric DB item id
+            item = await retrieve_item_by_plaid_item_id(plaid_item_id)
+            numeric_item_id = item['id'] if isinstance(item, dict) else item.id
+
+            # 3) notify UI to refetch
+            try:
+                io.emit('NEW_TRANSACTIONS_DATA', {'itemId': numeric_item_id})
+            except Exception as e:
+                print(f"ERROR: Failed to emit socket event: {e}")
+                
+            return
+            
         except Exception as e:
-            print(f"DEBUG: Failed to emit NEW_TRANSACTIONS_DATA: {e}")
-    elif webhook_code in ['DEFAULT_UPDATE', 'INITIAL_UPDATE', 'HISTORICAL_UPDATE']:
-        result = await update_transactions(plaid_item_id)
-        item = await retrieve_item_by_plaid_item_id(plaid_item_id)
-        server_log_and_emit_socket(
-            f'Historical transactions: {result["added_count"]} added, '
-            f'{result["modified_count"]} modified, '
-            f'{result["removed_count"]} removed',
-            item['id']
-        )
-        try:
-            io.emit('NEW_TRANSACTIONS_DATA', {'itemId': item['id']})
-            print(f"DEBUG: Emitted NEW_TRANSACTIONS_DATA for item {item['id']}")
-        except Exception as e:
-            print(f"DEBUG: Failed to emit NEW_TRANSACTIONS_DATA: {e}")
+            print(f"ERROR: Transaction webhook processing failed for item {plaid_item_id}: {e}")
+            print(f"ERROR: Exception type: {type(e)}")
+            # Still try to emit an error event to the UI
+            try:
+                item = await retrieve_item_by_plaid_item_id(plaid_item_id)
+                numeric_item_id = item['id'] if isinstance(item, dict) else item.id
+                io.emit('TRANSACTION_SYNC_ERROR', {'itemId': numeric_item_id, 'error': str(e)})
+            except:
+                pass
+            raise
     else:
-        server_log_and_emit_socket('unhandled webhook type received.', plaid_item_id)
+        print(f"DEBUG: Unhandled webhook type/code: {webhook_type}/{webhook_code}")
+    
+    

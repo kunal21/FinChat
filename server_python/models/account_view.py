@@ -1,7 +1,7 @@
 from db import db
 from sqlalchemy import Table
 class AccountView(db.Model):
-    __tablename__ = 'accounts'  # Map to the accounts view
+    __tablename__ = 'v_accounts'  # Map to the accounts view
     __table_args__ = {'extend_existing': True}  # Allow reuse if already defined
 
     id = db.Column(db.Integer, primary_key=True)

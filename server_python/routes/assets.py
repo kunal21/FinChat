@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, abort
 from models import Asset
 import logging
 from db import db
-from utils import sanitize_asset
+from core.utils import sanitize_asset
 
 # This module handles asset-related routes for the Flask application.
 # It includes routes for creating, retrieving, and deleting assets.

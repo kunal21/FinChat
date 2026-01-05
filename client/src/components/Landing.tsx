@@ -23,6 +23,10 @@ export default function Landing() {
   const returnToCurrentUser = () => {
     history.push(`/user/${userState.currentUser.id}`);
   };
+
+  const goToPortfolioImpact = () => {
+    history.push('/portfolio-impact');
+  };
   return (
     <div>
       <Banner initialSubheading />
@@ -43,6 +47,9 @@ export default function Landing() {
             Return to Current User
           </Button>
         )}
+        <Button className="btnWithMargin" onClick={goToPortfolioImpact} centered inline>
+          View Portfolio Impact
+        </Button>
       </div>
       {isAdding && <AddUserForm hideForm={hideForm} />}
     </div>

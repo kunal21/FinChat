@@ -11,4 +11,3 @@ watchdog                      # For file monitoring
 Flask-Migrate==4.0.4          # For database migrations
 flask-socketio==5.3.6         # Socket.IO integration
 openai                        # OpenAI API client
-qdrant-client

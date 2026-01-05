@@ -51,11 +51,12 @@ class PlaidClient:
         self._initialized = True
 
         PLAID_CATEGORIES = []
-        with open("transactions-personal-finance-category-taxonomy.csv", newline="", encoding="utf-8") as f:
+        csv_path = os.path.join(os.path.dirname(__file__), "data", "transactions-personal-finance-category-taxonomy.csv")
+        with open(csv_path, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 PLAID_CATEGORIES.append((row["PRIMARY"], row["DETAILED"], row["DESCRIPTION"]))
-        
+
         self.PLAID_CATEGORIES = PLAID_CATEGORIES
 
     def log_plaid_api_event(self, item_id, user_id, plaid_method, args, response):
@@ -105,7 +106,7 @@ class PlaidClient:
                     phone_number='+1 415 5550123'
                 ),
                 client_name=link_token_params['client_name'],
-                products=[Products('transactions')],
+                products=[Products('transactions'), Products('investments')],
                 country_codes=[CountryCode('US')],
                 language='en',
                 webhook=link_token_params['webhook'],

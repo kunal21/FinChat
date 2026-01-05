@@ -3,8 +3,7 @@ from datetime import datetime, date
 from db import db
 from models import Transaction, TransactionView
 from sqlalchemy import func, and_, extract
-from services.vector_store import VectorStore
-from openai_client import openai_client
+from integrations.openai_client import openai_client
 import logging
 
 logger = logging.getLogger(__name__)

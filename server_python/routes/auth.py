@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, abort
 from models import User
 import logging
-from utils import sanitize_user
+from core.utils import sanitize_user
 
 bp = Blueprint("auth", __name__)
 logger = logging.getLogger(__name__)

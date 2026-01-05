@@ -3,11 +3,10 @@ from models import Item, Account, Transaction
 from models import TransactionView  # Updated import
 import logging
 from db import db
-from plaid_client import plaid_client
-from update_transactions import update_transactions
+from integrations.plaid_client import plaid_client
 import os   
 from sqlalchemy import text
-from utils import sanitize_item
+from core.utils import sanitize_item
 
 bp = Blueprint("items", __name__)
 logger = logging.getLogger(__name__)
@@ -51,8 +50,8 @@ async def create_item():
         db.session.commit()
 
         # await update_transactions(plaid_item_id)
-        io = current_app.config['socketio']
-        io.emit('NEW_TRANSACTIONS_DATA', {'itemId': new_item.id})
+        # io = current_app.config['socketio']
+        # io.emit('NEW_TRANSACTIONS_DATA', {'itemId': new_item.id})
         
         return jsonify(sanitize_item(new_item))
     except Exception as e:

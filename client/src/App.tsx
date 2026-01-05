@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.min.css';
 import Sockets from "./components/Sockets.jsx";
 import OAuthLink from './components/OAuthLink.tsx';
 import Landing from './components/Landing.tsx';
+import PortfolioImpact from './components/PortfolioImpact.tsx';
 import UserPage from "./components/UserPage.tsx";
 import UserList from './components/UserList.tsx';
 import { AccountsProvider } from './services/accounts.tsx';
@@ -44,6 +45,7 @@ function App() {
                           <Sockets />
                           <Switch>
                             <Route exact path="/" component={Landing} />
+                            <Route path="/portfolio-impact" component={PortfolioImpact} />
                             <Route path="/user/:userId" component={UserPage} />
                             <Route path="/oauth-link" component={OAuthLink} />
                             <Route path="/admin" component={UserList} />

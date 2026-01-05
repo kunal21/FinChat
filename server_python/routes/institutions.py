@@ -1,4 +1,4 @@
-from plaid_client import plaid_client
+from integrations.plaid_client import plaid_client
 from flask import Blueprint, request, jsonify
 import logging
 

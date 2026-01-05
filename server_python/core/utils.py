@@ -1,4 +1,5 @@
- 
+from datetime import datetime
+
 
 def sanitize_user(user):
     """Sanitizes user data"""
@@ -79,6 +80,74 @@ def sanitize_asset(asset):
         "created_at": asset.created_at.isoformat() if asset.created_at else None,
         "updated_at": asset.updated_at.isoformat() if asset.updated_at else None
     }
+
+
+def sanitize_holding(holding):
+    """Sanitizes holding data"""
+    return {
+        "id": holding.id,
+        "account_id": holding.account_id,
+        "plaid_account_id": holding.plaid_account_id,
+        "security_id": holding.security_id,
+        "name": holding.name,
+        "ticker_symbol": holding.ticker_symbol,
+        "security_type": holding.security_type,
+        "quantity": float(holding.quantity) if holding.quantity is not None else None,
+        "institution_price": (
+            float(holding.institution_price) if holding.institution_price is not None else None
+        ),
+        "institution_price_as_of": (
+            holding.institution_price_as_of.isoformat()
+            if holding.institution_price_as_of
+            else None
+        ),
+        "institution_value": (
+            float(holding.institution_value) if holding.institution_value is not None else None
+        ),
+        "cost_basis": float(holding.cost_basis) if holding.cost_basis is not None else None,
+        "iso_currency_code": holding.iso_currency_code,
+        "unofficial_currency_code": holding.unofficial_currency_code,
+        "created_at": holding.created_at.isoformat() if holding.created_at else None,
+        "updated_at": holding.updated_at.isoformat() if holding.updated_at else None,
+    }
+
+
+def sanitize_user_impact(impact):
+    """Sanitizes user impact data with article details"""
+    return {
+        "id": impact.id,
+        "user_id": impact.user_id,
+        "article_id": impact.article_id,
+        "ticker": impact.ticker,
+        "impact_level": impact.impact_level,
+        "impact_summary": impact.impact_summary,
+        "estimated_effect": impact.estimated_effect,
+        "read": impact.read,
+        "dismissed": impact.dismissed,
+        "created_at": impact.created_at.isoformat() if impact.created_at else None,
+        # Include article details
+        "article": {
+            "id": impact.article.id,
+            "title": impact.article.title,
+            "summary": impact.article.summary,
+            "url": impact.article.url,
+            "source": impact.article.source,
+            "published_at": impact.article.published_at.isoformat() if impact.article.published_at else None,
+        } if impact.article else None,
+    }
+
+
+def parse_plaid_datetime(value):
+    if not value:
+        return None
+    if hasattr(value, "isoformat"):
+        return value
+    try:
+        if "T" in value:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
 
 
  

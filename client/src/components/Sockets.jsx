@@ -24,6 +24,22 @@ export default function Sockets() {
       getTransactionsByItem(itemId);
     });
 
+    socket.current.on('HISTORICAL_UPDATE', ({ itemId } = {}) => {
+      const msg = `New Webhook Event: Item ${itemId}: Historical transactions loaded`;
+      console.log(msg);
+      toast(msg);
+      getAccountsByItem(itemId);
+      getTransactionsByItem(itemId);
+    });
+
+    socket.current.on('NEW_TRANSACTIONS_DATA', ({ itemId } = {}) => {
+      const msg = `New Webhook Event: Item ${itemId}: New transactions loaded`;
+      console.log(msg);
+      toast(msg);
+      getAccountsByItem(itemId);
+      getTransactionsByItem(itemId);
+    });
+
     socket.current.on('ERROR', ({ itemId, errorCode } = {}) => {
       const msg = `New Webhook Event: Item ${itemId}: Item Error ${errorCode}`;
       console.error(msg);
@@ -45,10 +61,6 @@ export default function Sockets() {
       getItemById(itemId, true);
     });
 
-    socket.current.on('NEW_TRANSACTIONS_DATA', ({ itemId } = {}) => {
-      getAccountsByItem(itemId);
-      getTransactionsByItem(itemId);
-    });
 
     socket.current.on('NEW_RESPONSE_MESSAGE', ({ message } = {}) => {
       dispatch({

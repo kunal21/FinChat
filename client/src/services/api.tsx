@@ -59,6 +59,12 @@ export const getAccountsByItem = (itemId: number) =>
 export const getAccountsByUser = (userId: number) =>
   api.get(`/users/${userId}/accounts`);
 
+export const getHoldingsByUser = (userId: number) =>
+  api.get(`/users/${userId}/holdings`);
+
+export const getHoldingsByAccount = (accountId: number) =>
+  api.get(`/accounts/${accountId}/holdings`);
+
 // transactions
 export const getTransactionsByAccount = (accountId: number) =>
   api.get(`/accounts/${accountId}/transactions`);
@@ -80,8 +86,14 @@ export const deleteMessageById = (messageId: number) =>
   api.delete(`/messages/${messageId}`);
 export const getMessageByMessageId = (messageId: number) =>
   api.get(`/messages/${messageId}`);
-export const deleteAllMessagesByUser = (userId: number) => 
+export const deleteAllMessagesByUser = (userId: number) =>
   api.delete(`/users/${userId}/messages`);
+
+// portfolio impacts
+export const getUserImpacts = (userId: number, unreadOnly = false) =>
+  api.get(`/users/${userId}/impacts`, { params: { unread_only: unreadOnly } });
+export const updateUserImpact = (userId: number, impactId: string, data: { read?: boolean; dismissed?: boolean }) =>
+  api.patch(`/users/${userId}/impacts/${impactId}`, data);
 
 // misc
 export const postLinkEvent = (event: any) => api.post(`/link-event`, event);

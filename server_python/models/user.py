@@ -8,6 +8,7 @@ class User(db.Model, TimestampMixin):
     username = db.Column(db.Text, unique=True, nullable=False)
 
     # relationships
-    items   = db.relationship("Item",   back_populates="user", cascade="all, delete")
-    assets  = db.relationship("Asset",  back_populates="user", cascade="all, delete")
+    items = db.relationship("Item", back_populates="user", cascade="all, delete")
+    assets = db.relationship("Asset", back_populates="user", cascade="all, delete")
     messages = db.relationship("Message", back_populates="user", cascade="all, delete")
+    impacts = db.relationship("UserImpact", back_populates="user", cascade="all, delete")

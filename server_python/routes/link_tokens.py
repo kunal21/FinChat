@@ -1,6 +1,6 @@
 # server_python/routes/link_tokens.py
 from flask import Blueprint, request, jsonify
-from plaid_client import plaid_client
+from integrations.plaid_client import plaid_client
 import requests
 import os
 from models import Item

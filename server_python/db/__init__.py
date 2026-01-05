@@ -17,10 +17,11 @@ def init_db(app):
         db.create_all()
         
         create_timestamp_trigger()
+        create_database_views()
 
         # Create triggers for each table
         tables = ['users_table', 'items_table', 'assets_table', 
-                    'accounts_table', 'transactions_table']
+                    'accounts_table', 'transactions_table', 'holdings_table']
         
         for table in tables:
             trigger_name = f"{table}_updated_at_timestamp"

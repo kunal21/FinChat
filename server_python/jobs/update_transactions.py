@@ -4,15 +4,19 @@ Functions for updating transactions from Plaid.
 
 import os
 from typing import Dict, Any
-from plaid_client import plaid_client
+from integrations.plaid_client import plaid_client
 from db import db
 from db.queries import retrieve_item_by_plaid_item_id
-from models import Transaction, Item, Account
+from models import Transaction, Account, Item
+from db import db
+from integrations.openai_client import openai_client
+import logging
 from plaid.model.transactions_sync_request import TransactionsSyncRequest
 from plaid.model.accounts_get_request import AccountsGetRequest
 from services.summary_generator import index_transaction_summaries, create_monthly_rollups
 import logging
 logger = logging.getLogger(__name__)
+
 
 async def update_transactions(plaid_item_id: str) -> Dict[str, int]:
     """
@@ -27,6 +31,7 @@ async def update_transactions(plaid_item_id: str) -> Dict[str, int]:
     # Get the item's access token
     item = await retrieve_item_by_plaid_item_id(plaid_item_id)
     access_token = item['access_token']
+    # access_token = item['plaid_access_token']
 
     # Get the latest cursor
     cursor = await get_latest_cursor(plaid_item_id)
@@ -46,9 +51,6 @@ async def update_transactions(plaid_item_id: str) -> Dict[str, int]:
             response = plaid_client.client.transactions_sync(request)
 
             # Add debug logging
-            print(f"DEBUG: Plaid response - added: {len(response['added'])}, modified: {len(response['modified'])}, removed: {len(response['removed'])}")
-            print(f"DEBUG: Has more: {response['has_more']}")
-            print(f"DEBUG: Next cursor: {response['next_cursor']}")
             if response['added']:
                 print(f"DEBUG: First added transaction: {response['added'][0]}")
             
@@ -83,16 +85,6 @@ async def update_transactions(plaid_item_id: str) -> Dict[str, int]:
         removed
     )
 
-    # Index transaction summaries to Qdrant
-    try:
-        await index_transaction_summaries(plaid_item_id, added, modified)
-        
-        # Create monthly rollups for this user
-        item = await retrieve_item_by_plaid_item_id(plaid_item_id)
-        await create_monthly_rollups(str(item['user_id']))
-    except Exception as e:
-        logger.warning(f"Qdrant indexing failed for transactions: {e}")
-    
     # Update the cursor
     await update_cursor(plaid_item_id, cursor)
 
@@ -144,91 +136,108 @@ async def update_transactions_in_db(
         removed: List of removed transaction IDs
     """
     try:
-         # Insert new transactions
+        # Insert new transactions
+        added_count = 0
+        skipped_count = 0
+        
         for transaction in added:
-            account = Account.query.filter_by(plaid_account_id=transaction['account_id']).first()
-            if not account:
-                logger.warning(f"Account with plaid_account_id {transaction['account_id']} not found.")
-                continue
-            
-            # Check if transaction already exists
-            existing_transaction = Transaction.query.filter_by(
-                plaid_transaction_id=transaction['transaction_id']
-            ).first()
-            
-            if existing_transaction:
-                logger.info(f"Transaction {transaction['transaction_id']} already exists, skipping")
-                continue
-            
-            new_transaction = Transaction(
-                plaid_transaction_id=transaction['transaction_id'],
-                account_id=account.id,
-                plaid_category_id=transaction.get('category_id'),
-                category=transaction.get('category'),
-                personal_finance_category_primary=transaction.get('personal_finance_category', {}).get('primary'),
-                personal_finance_category_detailed=transaction.get('personal_finance_category', {}).get('detailed'),
-                type=transaction.get('transaction_type'),
-                name=transaction['name'],
-                amount=transaction['amount'],
-                iso_currency_code=transaction.get('iso_currency_code'),
-                unofficial_currency_code=transaction.get('unofficial_currency_code'),
-                date=transaction['date'],
-                pending=transaction['pending'],
-                account_owner=transaction.get('account_owner')
-            )
-            db.session.add(new_transaction)
-            print(f"DEBUG: Added transaction {transaction['transaction_id']} to session")
-
-        # Update modified transactions
-        for transaction in modified:
-            existing_transaction = Transaction.query.filter_by(
-                plaid_transaction_id=transaction['transaction_id']
-            ).first()
-            if existing_transaction:
+            try:
                 account = Account.query.filter_by(plaid_account_id=transaction['account_id']).first()
                 if not account:
-                    logger.warning(f"Account with plaid_account_id {transaction['account_id']} not found when updating tx {transaction.get('transaction_id')}")
+                    logger.error(f"Account with plaid_account_id {transaction['account_id']} not found for transaction {transaction.get('transaction_id')}. Skipping transaction.")
+                    skipped_count += 1
                     continue
-                existing_transaction.account_id = account.id  # Update account_id
-                existing_transaction.plaid_category_id = transaction.get('category_id')
-                existing_transaction.category = transaction.get('category')
-                # defensive accessors for personal finance category
-                pfc = transaction.get('personal_finance_category') or {}
-                existing_transaction.personal_finance_category_primary = pfc.get('primary')
-                existing_transaction.personal_finance_category_detailed = pfc.get('detailed')
-                existing_transaction.type = transaction.get('transaction_type')
-                existing_transaction.name = transaction.get('name')
-                existing_transaction.amount = transaction.get('amount')
-                existing_transaction.iso_currency_code = transaction.get('iso_currency_code')
-                existing_transaction.unofficial_currency_code = transaction.get('unofficial_currency_code')
-                existing_transaction.date = transaction.get('date')
-                existing_transaction.pending = transaction.get('pending')
-                existing_transaction.account_owner = transaction.get('account_owner')
+                
+                # Check if transaction already exists
+                existing_transaction = Transaction.query.filter_by(
+                    plaid_transaction_id=transaction['transaction_id']
+                ).first()
+                
+                if existing_transaction:
+                    logger.info(f"Transaction {transaction['transaction_id']} already exists, skipping")
+                    skipped_count += 1
+                    continue
+                
+                new_transaction = Transaction(
+                    plaid_transaction_id=transaction['transaction_id'],
+                    account_id=account.id,
+                    plaid_category_id=transaction.get('category_id'),
+                    category=transaction.get('category'),
+                    personal_finance_category_primary=transaction.get('personal_finance_category', {}).get('primary'),
+                    personal_finance_category_detailed=transaction.get('personal_finance_category', {}).get('detailed'),
+                    type=transaction.get('transaction_type'),
+                    name=transaction['name'],
+                    amount=transaction['amount'],
+                    iso_currency_code=transaction.get('iso_currency_code'),
+                    unofficial_currency_code=transaction.get('unofficial_currency_code'),
+                    date=transaction['date'],
+                    pending=transaction['pending'],
+                    account_owner=transaction.get('account_owner')
+                )
+                db.session.add(new_transaction)
+                db.session.flush()  # Get the ID for vector indexing
+                
+                added_count += 1
+                logger.info(f"Added transaction {transaction['transaction_id']} to session")
+                
+            except Exception as e:
+                logger.error(f"Error processing transaction {transaction.get('transaction_id', 'unknown')}: {e}")
+                skipped_count += 1
+                continue
+
+        # Update modified transactions
+        modified_count = 0
+        for transaction in modified:
+            try:
+                existing_transaction = Transaction.query.filter_by(
+                    plaid_transaction_id=transaction['transaction_id']
+                ).first()
+                if existing_transaction:
+                    account = Account.query.filter_by(plaid_account_id=transaction['account_id']).first()
+                    if not account:
+                        logger.error(f"Account with plaid_account_id {transaction['account_id']} not found when updating tx {transaction.get('transaction_id')}")
+                        continue
+                    
+                    existing_transaction.account_id = account.id  # Update account_id
+                    existing_transaction.plaid_category_id = transaction.get('category_id')
+                    existing_transaction.category = transaction.get('category')
+                    # defensive accessors for personal finance category
+                    pfc = transaction.get('personal_finance_category') or {}
+                    existing_transaction.personal_finance_category_primary = pfc.get('primary')
+                    existing_transaction.personal_finance_category_detailed = pfc.get('detailed')
+                    existing_transaction.type = transaction.get('transaction_type')
+                    existing_transaction.name = transaction.get('name')
+                    existing_transaction.amount = transaction.get('amount')
+                    existing_transaction.iso_currency_code = transaction.get('iso_currency_code')
+                    existing_transaction.unofficial_currency_code = transaction.get('unofficial_currency_code')
+                    existing_transaction.date = transaction.get('date')
+                    existing_transaction.pending = transaction.get('pending')
+                    existing_transaction.account_owner = transaction.get('account_owner')
+                    modified_count += 1
+                    logger.info(f"Updated transaction {transaction['transaction_id']}")
+            except Exception as e:
+                logger.error(f"Error updating transaction {transaction.get('transaction_id', 'unknown')}: {e}")
+                continue
 
         # Remove deleted transactions
+        removed_count = 0
         for transaction_id in removed:
-            # Delete from Qdrant first
             try:
-                from services.vector_store import VectorStore
-                vector_store = VectorStore()
-                point_id = f"tx_{transaction_id}"
-                vector_store.client.delete(
-                    collection_name=os.getenv("QDRANT_COLLECTION_TX", "finchat_tx_summaries"),
-                    points_selector=[point_id]
-                )
-                logger.info(f"Deleted transaction {transaction_id} from Qdrant")
+                deleted_rows = Transaction.query.filter_by(plaid_transaction_id=transaction_id).delete()
+                if deleted_rows > 0:
+                    removed_count += 1
+                    logger.info(f"Deleted transaction {transaction_id} from database")
             except Exception as e:
-                logger.warning(f"Failed to delete transaction {transaction_id} from Qdrant: {e}")
-            
-            Transaction.query.filter_by(plaid_transaction_id=transaction_id).delete()
+                logger.error(f"Error deleting transaction {transaction_id}: {e}")
+                continue
 
         db.session.commit()
-        print(f"DEBUG: Committed {len(added)} transactions to database")
+        logger.info(f"Successfully committed to database: {added_count} added, {modified_count} modified, {removed_count} removed, {skipped_count} skipped")
+        
     except Exception as e:
-        print(f"DEBUG: Database commit failed with error: {e}")
-        print(f"DEBUG: Error type: {type(e)}")
+        logger.error(f"Critical error updating transactions in database: {e}")
+        logger.error(f"Error type: {type(e)}")
         db.session.rollback()
-        logger.error(f"Error updating transactions in the database: {e}")
         raise
 
 async def update_accounts_in_db(plaid_item_id: str, accounts: list) -> None:

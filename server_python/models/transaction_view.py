@@ -1,7 +1,7 @@
 from db import db
 from sqlalchemy import Table
 class TransactionView(db.Model):
-    __tablename__ = 'transactions'  # Map to the transactions view
+    __tablename__ = 'v_transactions'  # Map to the transactions view
     __table_args__ = {'extend_existing': True}  # Allow reuse if already defined
 
     id = db.Column(db.Integer, primary_key=True)

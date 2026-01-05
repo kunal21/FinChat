@@ -19,3 +19,4 @@ class Account(db.Model, TimestampMixin):
 
     item        = db.relationship("Item", back_populates="accounts")
     transactions = db.relationship("Transaction", back_populates="account", cascade="all, delete")
+    holdings = db.relationship("Holding", backref="account", cascade="all, delete")

@@ -21,6 +21,221 @@ body {
   padding: 10 * $unit 5 * $unit;
 }
 
+.userTabs {
+  display: flex;
+  gap: $unit;
+  margin: 3 * $unit 0 4 * $unit;
+  background: $black100;
+  padding: $unit;
+  border-radius: 999px;
+  width: fit-content;
+  border: 1px solid $black200;
+}
+
+.userTab {
+  border: none;
+  background: transparent;
+  padding: $unit 3 * $unit;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  color: $black700;
+  transition: all 0.2s ease;
+}
+
+.userTab.active {
+  background: $black1000;
+  color: $white;
+}
+
+.userImpactPanel {
+  margin-top: 2 * $unit;
+}
+
+.profileSnapshot {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 2 * $unit;
+  margin-bottom: 4 * $unit;
+}
+
+.snapshotCard {
+  background: $white;
+  border: $border;
+  border-radius: 18px;
+  padding: 2 * $unit 3 * $unit;
+}
+
+.snapshotLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.15rem;
+  font-size: 0.7rem;
+  color: $black600;
+}
+
+.snapshotValue {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.portfolioImpactPage {
+  --impact-ink: #0f1f24;
+  --impact-ink-muted: #475e66;
+  --impact-panel: #fefcf6;
+  --impact-accent: #1e6b6e;
+  --impact-accent-soft: rgba(30, 107, 110, 0.12);
+  --impact-warn: #b45309;
+  --impact-warn-soft: rgba(180, 83, 9, 0.14);
+  --impact-risk: #9f1239;
+  --impact-risk-soft: rgba(159, 18, 57, 0.14);
+  color: var(--impact-ink);
+  background: linear-gradient(135deg, #f8f6ef 0%, #f2f7f6 55%, #eef6f6 100%);
+  border-radius: 24px;
+  padding: 6 * $unit;
+  border: 1px solid rgba(15, 31, 36, 0.08);
+}
+
+.portfolioHero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 4 * $unit;
+  margin-bottom: 5 * $unit;
+}
+
+.portfolioKicker {
+  text-transform: uppercase;
+  letter-spacing: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--impact-accent);
+  margin-bottom: $unit;
+}
+
+.portfolioHero h1 {
+  font-size: 2.6rem;
+  margin: 0 0 $unit 0;
+}
+
+.portfolioSubhead {
+  color: var(--impact-ink-muted);
+  max-width: 520px;
+}
+
+.portfolioHeroMeta {
+  display: grid;
+  gap: 2 * $unit;
+  padding: 2 * $unit 3 * $unit;
+  background: var(--impact-panel);
+  border: 1px solid rgba(15, 31, 36, 0.08);
+  border-radius: 18px;
+  min-width: 220px;
+}
+
+.metaLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12rem;
+  color: var(--impact-ink-muted);
+}
+
+.metaValue {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.impactGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 3 * $unit;
+}
+
+.impactCard {
+  background: var(--impact-panel);
+  border-radius: 20px;
+  padding: 3 * $unit;
+  border: 1px solid rgba(15, 31, 36, 0.08);
+  display: grid;
+  gap: 2 * $unit;
+}
+
+.impactHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $unit;
+}
+
+.impactTicker {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.impactLevel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+}
+
+.impactLevel--high {
+  background: var(--impact-risk-soft);
+  color: var(--impact-risk);
+}
+
+.impactLevel--medium {
+  background: var(--impact-warn-soft);
+  color: var(--impact-warn);
+}
+
+.impactLevel--low {
+  background: var(--impact-accent-soft);
+  color: var(--impact-accent);
+}
+
+.impactSection {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.impactLabel {
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.16rem;
+  color: var(--impact-ink-muted);
+}
+
+.impactEstimate {
+  font-weight: 600;
+}
+
+.impactActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $unit;
+  align-items: center;
+}
+
+.impactGhost {
+  background: transparent;
+  border: 1px solid rgba(15, 31, 36, 0.2);
+  color: var(--impact-ink);
+}
+
+@media (max-width: 720px) {
+  .portfolioImpactPage {
+    padding: 4 * $unit 3 * $unit;
+  }
+
+  .portfolioHero {
+    flex-direction: column;
+  }
+
+  .portfolioHeroMeta {
+    width: 100%;
+  }
+}
+
 /*
 
 shared styles
@@ -37,7 +252,6 @@ shared styles
   border: $border;
   border-radius: $border-radius;
   margin-bottom: 3 * $unit;
-  box-shadow: $shadow-xsmall;
 }
 
 .card {
@@ -157,7 +371,7 @@ UserCard
 */
 
 .user-card__box {
-  box-shadow: $shadow-medium;
+  box-shadow: $shadow-xsmall;
   border-bottom: $border;
 }
 .user-card {
@@ -209,7 +423,7 @@ Item overview
   padding: 0 $unit 0 0;
   background-color: $black100;
   border-bottom: $border;
-  box-shadow: $shadow-medium;
+  box-shadow: $shadow-xsmall;
   display: grid;
   grid-template-columns: 9fr 1fr;
 
@@ -433,6 +647,35 @@ net worth
 
 .holdingsHeading {
   margin-top: 0;
+}
+
+.accountHoldings {
+  margin-bottom: 3 * $unit;
+}
+
+.holdingsTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.holdingsTable th,
+.holdingsTable td {
+  padding: $unit 0;
+  border-bottom: $border;
+}
+
+.holdingsColName,
+.holdingName {
+  text-align: left;
+  font-weight: 500;
+}
+
+.holdingsColQty,
+.holdingsColValue,
+.holdingQty,
+.holdingValue {
+  text-align: right;
+  font-family: $font-stack-monospace;
 }
 
 .data,

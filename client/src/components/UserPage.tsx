@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, RouteComponentProps } from 'react-router-dom';
 import sortBy from 'lodash/sortBy';
 import NavigationLink from 'plaid-threads/NavigationLink';
@@ -21,11 +21,13 @@ import Banner from './Banner.tsx';
 import LaunchLink from './LaunchLink.tsx';
 import SpendingInsights from './SpendingInsights.tsx';
 import NetWorth from './NetWorth.tsx';
+import Holdings from './Holdings.tsx';
 import ItemCard from './ItemCard.tsx';
 import UserCard from './UserCard.tsx';
 import LoadingCallout from './LoadingCallout.tsx';
 import ErrorMessage from './ErrorMessage.tsx';
 import ChatWindow from './ChatWindow.tsx';
+import PortfolioImpact from './PortfolioImpact.tsx';
 
 
 // provides view of user's net worth, spending by category and allows them to explore
@@ -44,7 +46,9 @@ const UserPage = ({ match }: RouteComponentProps<RouteInfo>) => {
   const [transactions, setTransactions] = useState([]);
   const [accounts, setAccounts] = useState<AccountType[]>([]);
   const [assets, setAssets] = useState<AssetType[]>([]);
-  const [showChat, setShowChat] = useState(false);
+  const [activeTab, setActiveTab] = useState<'profile' | 'chat' | 'impact'>(
+    'profile'
+  );
 
   const { getTransactionsByUser, transactionsByUser } = useTransactions();
   const { getAccountsByUser, accountsByUser } = useAccounts();
@@ -60,9 +64,15 @@ const UserPage = ({ match }: RouteComponentProps<RouteInfo>) => {
     await generateLinkToken(userId, null);
   };
 
-  const toggleView = () => {
-    setShowChat(!showChat);
-  };
+  const profileSummary = useMemo(() => {
+    const totalAccounts = accounts.length;
+    const investmentAccounts = accounts.filter(account => account.type === 'investment')
+      .length;
+    return {
+      totalAccounts,
+      investmentAccounts,
+    };
+  }, [accounts]);
 
   // update data store with user
   useEffect(() => {
@@ -141,13 +151,39 @@ const UserPage = ({ match }: RouteComponentProps<RouteInfo>) => {
       </NavigationLink>
 
       <Banner />
-        <Button onClick={toggleView} centered inline>
-          {showChat ? 'View Financial Info' : 'Chat with App'}
-      </Button>
+      <div className="userTabs">
+        <button
+          className={`userTab ${activeTab === 'profile' ? 'active' : ''}`}
+          onClick={() => setActiveTab('profile')}
+          type="button"
+        >
+          Profile
+        </button>
+        <button
+          className={`userTab ${activeTab === 'chat' ? 'active' : ''}`}
+          onClick={() => setActiveTab('chat')}
+          type="button"
+        >
+          FinChat
+        </button>
+        <button
+          className={`userTab ${activeTab === 'impact' ? 'active' : ''}`}
+          onClick={() => setActiveTab('impact')}
+          type="button"
+        >
+          Portfolio Impact
+        </button>
+      </div>
 
-      {showChat ? (
-        <ChatWindow userId={userId} />
-      ) : (
+      {activeTab === 'chat' && <ChatWindow userId={userId} />}
+
+      {activeTab === 'impact' && (
+        <div className="userImpactPanel">
+          <PortfolioImpact userId={userId} />
+        </div>
+      )}
+
+      {activeTab === 'profile' && (
         <>
           {linkTokens.error.error_code != null && (
             <Callout warning>
@@ -174,6 +210,18 @@ const UserPage = ({ match }: RouteComponentProps<RouteInfo>) => {
           )}
           {numOfItems > 0 && transactions.length > 0 && (
             <>
+              <div className="profileSnapshot">
+                <div className="snapshotCard">
+                  <div className="snapshotLabel">Total accounts</div>
+                  <div className="snapshotValue">{profileSummary.totalAccounts}</div>
+                </div>
+                <div className="snapshotCard">
+                  <div className="snapshotLabel">Investment accounts</div>
+                  <div className="snapshotValue">
+                    {profileSummary.investmentAccounts}
+                  </div>
+                </div>
+              </div>
               <NetWorth
                 accounts={accounts}
                 numOfItems={numOfItems}
@@ -186,6 +234,9 @@ const UserPage = ({ match }: RouteComponentProps<RouteInfo>) => {
                 transactions={transactions}
               />
             </>
+          )}
+          {numOfItems > 0 && (
+            <Holdings accounts={accounts} userId={userId} />
           )}
           {numOfItems === 0 && transactions.length === 0 && assets.length > 0 && (
             <>
