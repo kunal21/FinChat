@@ -249,12 +249,3 @@ logger.error("Error message")
 4. **Type Safety**: Use type hints where practical
 5. **Logging**: Comprehensive logging for debugging
 6. **Modularity**: Clear folder structure for easy navigation
-
-## Contributing
-
-When adding code:
-- Follow existing patterns
-- Add docstrings to functions
-- Update this README if adding new folders
-- Test your changes
-- Update requirements.txt if adding dependencies
